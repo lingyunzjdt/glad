@@ -11,6 +11,7 @@
 #include <boost/fusion/include/io.hpp>
 #include <boost/optional.hpp>
 #include <list>
+#include <map>
 
 namespace glad { namespace ast 
 {
@@ -60,7 +61,8 @@ namespace glad { namespace ast
         op_greater,
         op_greater_equal,
         op_and,
-        op_or
+        op_or,
+        op_concat
     };
 
     struct quoted_string {
@@ -129,7 +131,7 @@ namespace glad { namespace ast
 
     struct beamline_statement {
         identifier name;
-        std::list<identifier> lines;
+        expression line;
     };
 
     // print functions for debugging
@@ -146,19 +148,45 @@ namespace glad { namespace ast
     struct printer
     {
         typedef void result_type;
-        void operator()(nil) const { std::cout << "(nil)"; }
-        void operator()(bool v) const { std::cout << v; }
-        void operator()(double v) const { std::cout << v; }
-        void operator()(unsigned int v) const { std::cout << v; }
-        void operator()(const identifier& id) const {
-            std::cout << id.name; }
-        void operator()(const quoted_string& s) const {
+        std::vector<double> stack_;
+        std::vector<double>::iterator stack_ptr;
+        std::map<std::string, double> local_;
+
+        printer() 
+        :stack_(1024), stack_ptr(stack_.begin()) {}
+
+        void operator()(nil) { std::cout << "(nil)"; }
+        void operator()(bool v) { *stack_ptr++ = v; }
+        void operator()(double v) { *stack_ptr++ = v; }
+        void operator()(unsigned int v) { *stack_ptr++ = v; }
+        void operator()(const identifier& id) {
+            if (local_.find(id.name) != local_.end()) {
+                *stack_ptr++ = local_[id.name];
+            } else if (id.name.find(".") != std::string::npos) {
+                // an element/action/beamline
+            } else {
+                // not defined
+            }
+        }
+        void operator()(const quoted_string& s) {
             std::cout << '"' << s.s << '"'; }
-        void operator()(const unary& s) const {}
-        void operator()(const function_call& s) const {}
-        void operator()(const expression& ex) const {
+        void operator()(const unary& s) {
+            boost::apply_visitor(*this, s.operand_);
+            switch(s.operator_) {
+            case ast::op_negative:
+                stack_ptr[-1] = -stack_ptr[-1];
+                break;
+            case ast::op_positive:
+                break;
+            }
+        }
+        void operator()(const function_call& s) {}
+        void operator()(const expression& ex) {
+            // operand and a list of operation
             // std::cout << "(";
             boost::apply_visitor(*this, ex.first);
+            // std::cout << "Stack: " << (stack_ptr - stack_.begin()) << " "
+            //           << *stack_ptr << std::endl;
             BOOST_FOREACH(operation const& op, ex.rest)
             {
                 std::cout << ' ';
@@ -168,7 +196,7 @@ namespace glad { namespace ast
             // std::cout << ")";
         }
 
-        void operator()(const property& p) const {
+        void operator()(const property& p) {
             std::cout << p.name << "= ";
             std::list<expression>::const_iterator it = p.value.begin();
             if (p.value.size() > 1) {
@@ -185,25 +213,45 @@ namespace glad { namespace ast
                 (*this)(*it);
             }
         }
-        void operator()(const operation& opr) const {
+        void operator()(const operation& opr) {
             //std::cout << "( ";
             // not (*this)(opr.operand_); 
             boost::apply_visitor(*this, opr.operand_);
-            std::cout << ' ' << opr.operator_;
+            switch(opr.operator_) {
+            case ast::op_plus: 
+                stack_ptr[-2] += stack_ptr[-1];
+                --stack_ptr;
+                break;
+            case ast::op_minus: 
+                stack_ptr[-2] -= stack_ptr[-1];
+                --stack_ptr;
+                break;
+            case ast::op_times: 
+                stack_ptr[-2] *= stack_ptr[-1];
+                --stack_ptr;
+                break;
+            case ast::op_divide: 
+                stack_ptr[-2] /= stack_ptr[-1];
+                --stack_ptr;
+                break;
+            default:
+                std::cout << "op:" << opr.operator_ << " not defined" << std::endl;
+            }
+            std::cout << opr.operator_ << " :" << stack_ptr[-1];
             //std::cout << " )";
         }
-        void operator()(const statement_list& stl) const {
+        void operator()(const statement_list& stl) {
             BOOST_FOREACH(statement const& st, stl)
             {
                 std::cout << ' ';
                 boost::apply_visitor(*this, st);
             }
         }
-        void operator()(const assignment& st) const {
+        void operator()(const assignment& st) {
             (*this)(st.rhs);
-            std::cout << " -> " << st.lhs.name << std::endl;
+            local_[st.lhs.name] = stack_ptr[-1];
         }            
-        void operator()(const element_statement& es) const{
+        void operator()(const element_statement& es) {
             std::cout << "define: " << es.element_name << ": "
                       << es.element_type;
             BOOST_FOREACH(property const& p, *es.properties)
@@ -214,7 +262,7 @@ namespace glad { namespace ast
             }
             std::cout << ";" << std::endl;
         }
-        void operator()(const action_statement& es) const{
+        void operator()(const action_statement& es) {
             std::cout << "define: " << es.name << ": ";
             BOOST_FOREACH(property const& p, es.properties)
             {
@@ -224,10 +272,18 @@ namespace glad { namespace ast
             }
             std::cout << ";" << std::endl;
         }
-        void operator()(const beamline_statement& st) const {
+        void operator()(const beamline_statement& st) {
+        }
+
+        void print_locals() const {
+            std::cout << std::endl
+                      << "# local variables:" << std::endl;
+            std::map<std::string, double>::const_iterator it;
+            for ( it = local_.begin(); it != local_.end(); ++it) {
+                std::cout << it->first << "= " << it->second << std::endl;
+            }
         }
     };
-
 }}
 
 BOOST_FUSION_ADAPT_STRUCT(
@@ -282,7 +338,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 BOOST_FUSION_ADAPT_STRUCT(
     glad::ast::beamline_statement,
     (glad::ast::identifier, name)
-    (std::list<glad::ast::identifier>, lines)
+    (glad::ast::expression, line)
 )
 
 BOOST_FUSION_ADAPT_STRUCT(

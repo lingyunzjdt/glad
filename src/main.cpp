@@ -48,6 +48,7 @@ int main(int argc, char **argv)
 
     glad::ast::printer pprint;
     pprint(ast);
+    pprint.print_locals();
 
     std::cout << "-------------------------\n";
 
