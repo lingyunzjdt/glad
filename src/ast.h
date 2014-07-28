@@ -100,11 +100,15 @@ namespace glad { namespace ast
 
     struct statement_list;
     struct element_statement;
+    struct action_statement;
+    struct beamline_statement;
 
     typedef boost::variant<
-            assignment
-          , element_statement
-          , boost::recursive_wrapper<statement_list>
+        assignment,
+        element_statement,
+        action_statement,
+        boost::recursive_wrapper<beamline_statement>,
+        boost::recursive_wrapper<statement_list>
         >
     statement;
 
@@ -116,6 +120,16 @@ namespace glad { namespace ast
         identifier element_name;
         identifier element_type;
         boost::optional<property_list> properties;
+    };
+
+    struct action_statement {
+        identifier name;
+        property_list properties;
+    };
+
+    struct beamline_statement {
+        identifier name;
+        std::list<identifier> lines;
     };
 
     // print functions for debugging
@@ -200,6 +214,18 @@ namespace glad { namespace ast
             }
             std::cout << ";" << std::endl;
         }
+        void operator()(const action_statement& es) const{
+            std::cout << "define: " << es.name << ": ";
+            BOOST_FOREACH(property const& p, es.properties)
+            {
+                std::cout << ", ";
+                //boost::apply_visitor(*this, op);
+                (*this)(p);
+            }
+            std::cout << ";" << std::endl;
+        }
+        void operator()(const beamline_statement& st) const {
+        }
     };
 
 }}
@@ -245,6 +271,18 @@ BOOST_FUSION_ADAPT_STRUCT(
     (glad::ast::identifier, element_name)
     (glad::ast::identifier, element_type)
     (boost::optional<glad::ast::property_list>, properties)
+)
+
+BOOST_FUSION_ADAPT_STRUCT(
+    glad::ast::action_statement,
+    (glad::ast::identifier, name)
+    (glad::ast::property_list, properties)
+)
+
+BOOST_FUSION_ADAPT_STRUCT(
+    glad::ast::beamline_statement,
+    (glad::ast::identifier, name)
+    (std::list<glad::ast::identifier>, lines)
 )
 
 BOOST_FUSION_ADAPT_STRUCT(

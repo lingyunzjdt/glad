@@ -1,15 +1,12 @@
 CXXFLAGS=-I/opt/local/include
-OBJS=main.o statement.o expression.o
+OBJS=main.o statement.o #expression.o
 all: glad
 
 #%.o : src/%.cc
 %.o : src/%.cc
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $< -o $@
 
-statement.o: src/statement.cc src/statement_def.h src/statement.h
-	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $< -o $@
-
-expression.o: src/expression.cc src/expression_def.h src/expression.h
+statement.o: src/statement.cc src/statement_def.h src/statement.h src/expression.h
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $< -o $@
 
 main.o: src/main.cpp src/ast.h

@@ -23,6 +23,7 @@ namespace glad
         qi::alnum_type alnum;
         qi::lit_type lit;
 
+        using qi::uint_;
         using qi::on_error;
         using qi::on_success;
         using qi::fail;
@@ -40,6 +41,8 @@ namespace glad
                 element_statement
             |   assignment
             |   compound_statement
+            |   action_statement
+            |   beamline_statement
             ;
 
         identifier =
@@ -74,6 +77,19 @@ namespace glad
             >>   ';'
             ;
 
+        action_statement = 
+                identifier
+            >> +( ',' > property )
+            >>   ';'
+            ;
+
+        beamline_statement = 
+            (identifier >> ':' >> lit("line") >> '=' >> '(')
+            >> +(identifier % ',')
+            >> ')'
+            >> ';'
+            ;
+            
         compound_statement =
             '{' >> -statement_list >> '}'
             ;
@@ -84,6 +100,8 @@ namespace glad
             (identifier)
             (assignment)
             (element_statement)
+            (action_statement)
+            (beamline_statement)
             (property)
         );
 
@@ -105,6 +123,7 @@ namespace glad
         debug(assignment);
         debug(element_statement);
         debug(property);
+        debug(beamline_statement);
     }
 }
 

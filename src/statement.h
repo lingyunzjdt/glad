@@ -24,6 +24,8 @@ namespace glad
         qi::rule<Iterator, ast::assignment(), skipper<Iterator> > assignment;
         qi::rule<Iterator, ast::property(), skipper<Iterator> > property;
         qi::rule<Iterator, ast::element_statement(), skipper<Iterator> > element_statement;
+        qi::rule<Iterator, ast::action_statement(), skipper<Iterator> > action_statement;
+        qi::rule<Iterator, ast::beamline_statement(), skipper<Iterator> > beamline_statement;
         qi::rule<Iterator, std::string(), skipper<Iterator> > identifier;
     };
 }
