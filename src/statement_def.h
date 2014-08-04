@@ -40,6 +40,7 @@ namespace glad
             // variable_declaration
                 element_statement
             |   assignment
+            |   include_statement
             |   compound_statement
             |   action_statement
             |   beamline_statement
@@ -83,6 +84,12 @@ namespace glad
             >>   ';'
             ;
 
+        include_statement =
+            lit("include")
+            >> lit(",") >> expr.quoted_string
+            >> ';'
+            ;
+
         beamline_statement = 
             (identifier >> ':' >> lit("line") >> '=' >> '(')
             >> +(identifier % ',')
@@ -118,12 +125,13 @@ namespace glad
         //     annotation_function(error_handler.iters)(_val, _1));
         // on_success(return_statement,
         //     annotation_function(error_handler.iters)(_val, _1));
-
+        on_success(include_statement,
+                   annotation_function(error_handler.iters)(_val, _1));
         //debug(identifier);
-        debug(assignment);
-        debug(element_statement);
-        debug(property);
-        debug(beamline_statement);
+        //debug(assignment);
+        //debug(element_statement);
+        //debug(property);
+        //debug(beamline_statement);
     }
 }
 

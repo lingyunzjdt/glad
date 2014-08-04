@@ -1,0 +1,4 @@
+c = 3.0;
+include, "lat_assignment_01.dat";
+x = 1;
+include, "lat_assignment_01.dat";

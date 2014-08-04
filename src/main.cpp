@@ -5,21 +5,15 @@
 #include "statement.h"
 #include "skipper.h"
 #include <boost/lexical_cast.hpp>
+#include <boost/filesystem.hpp>
 #include <fstream>
+#include <string>
 
-///////////////////////////////////////////////////////////////////////////////
-//  Main program
-///////////////////////////////////////////////////////////////////////////////
-int main(int argc, char **argv)
+using namespace std;
+
+bool insert_ast(glad::ast::statement_list& ast, const string& fname)
 {
-    char const* filename;
-    if (argc > 1) {
-        filename = argv[1];
-    } else {
-        std::cerr << "Error: No input file provided." << std::endl;
-        return 1;
-    }
-
+    const char *filename = fname.c_str();
     std::ifstream in(filename, std::ios_base::in);
 
     if (!in) {
@@ -37,7 +31,7 @@ int main(int argc, char **argv)
     iterator_type iter = source_code.begin();
     iterator_type end = source_code.end();
 
-    glad::ast::statement_list ast;             // Our AST
+    // glad::ast::statement_list ast;             // Our AST
 
     glad::error_handler<iterator_type> error_handler(iter, end); // Our error handler
     //glad::function<iterator_type> function(error_handler); // Our parser
@@ -46,9 +40,6 @@ int main(int argc, char **argv)
 
     bool success = phrase_parse(iter, end, +function, skipper, ast);
 
-    glad::ast::printer pprint;
-    pprint(ast);
-
     std::cout << "-------------------------\n";
 
     if (success && iter == end) {
@@ -56,6 +47,76 @@ int main(int argc, char **argv)
     } else {
         std::cout << "Parse failure\n";
     }
+
+    return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Main program
+///////////////////////////////////////////////////////////////////////////////
+int main(int argc, char **argv)
+{
+    char const* filename;
+    if (argc > 1) {
+        filename = argv[1];
+    } else {
+        std::cerr << "Error: No input file provided." << std::endl;
+        return 1;
+    }
+
+    boost::filesystem::path INPDIR(filename);
+
+    glad::ast::statement_list ast;             // Our AST
+    bool success = insert_ast(ast, filename);
+    size_t MAX_DEPTH = 3;
+    size_t idepth = 0;
+    while(true) {
+        std::string filename = "";
+        glad::ast::statement_list::iterator inciter = ast.end();
+        for (glad::ast::statement_list::iterator iter = ast.begin(); 
+             iter != ast.end(); ++iter)
+        {
+            if (glad::ast::include_statement *inc =
+                boost::get<glad::ast::include_statement>(&(*iter)))
+            {
+                std::cout << "include:" <<  inc->filename.s  << std::endl;
+                filename = inc->filename.s;
+                inciter = iter;
+                break;
+            }
+        }
+
+        if (filename.length() > 0 && inciter != ast.end()) {
+            idepth += 1;
+            boost::filesystem::path subdir(filename);
+            glad::ast::statement_list subast;
+            std::string fname = filename;
+            if (!subdir.is_absolute()) {
+                // std::cout << "parent:" << INPDIR << std::endl
+                //           << "parent dir:" << INPDIR.parent_path() << std::endl;
+                boost::filesystem::path p(INPDIR.parent_path());
+                p /= filename;
+                fname = p.c_str();
+            }
+            // std::cout << "open:" << fname << ":" << 
+            //     subdir.is_absolute() << std::endl;
+            bool suc = insert_ast(subast, fname);
+            glad::ast::statement_list::iterator n = ast.erase(inciter);
+            ast.insert(n, subast.begin(), subast.end());
+        } else {
+            break;
+        }
+
+        if (idepth > 5) break;
+    }
+
+    std::cout << "-------- PRINT ---------------" << std::endl;
+    glad::ast::printer pprint;
+    pprint(ast);
+
+    // std::cout << "is_absolute: " << INPDIR.is_absolute() << std::endl;
+    // std::cout << "parent_path: " << INPDIR.parent_path() << std::endl;
+
     return 0;
 }
 

@@ -13,7 +13,7 @@ main.o: src/main.cpp src/ast.h
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $< -o $@
 
 glad: $(OBJS)
-	$(CXX) -o $@ $(OBJS)
+	$(CXX)  -L/opt/local/lib -o $@ $(OBJS) -lboost_system-mt -lboost_filesystem-mt
 
 clean:
 	rm -f *.o

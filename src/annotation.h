@@ -10,6 +10,9 @@
 #include <boost/mpl/bool.hpp>
 #include "ast.h"
 
+#include <iostream>
+#include <fstream>
+
 namespace glad
 {
     ////////////////////////////////////////////////////////////////////////////
@@ -70,6 +73,29 @@ namespace glad
             int id = iters.size();
             iters.push_back(pos);
             ast.id = id;
+        }
+
+        void operator()(ast::include_statement& ast, Iterator pos) const
+        {
+            std::cout << "open: " << ast.filename.s << std::endl;
+            // std::ifstream in(ast.filename.s, std::ios_base::in);
+            // std::string source_code; // We will read the contents here.
+            // in.unsetf(std::ios::skipws); // No white space skipping!
+            // std::copy(std::istream_iterator<char>(in),
+            //           std::istream_iterator<char>(),
+            //           std::back_inserter(source_code));
+
+            // typedef std::string::const_iterator iterator_type;
+            // iterator_type iter = source_code.begin();
+            // iterator_type end = source_code.end();
+            // glad::ast::statement_list subast;             // Our AST
+
+            // glad::error_handler<iterator_type> error_handler(iter, end); // Our error handler
+            // //glad::function<iterator_type> function(error_handler); // Our parser
+            // glad::statement<iterator_type> function(error_handler); // Our parser
+            // glad::skipper<iterator_type> skipper;       // Our skipper
+
+            // bool success = phrase_parse(iter, end, +function, skipper, subast);
         }
     };
 }
