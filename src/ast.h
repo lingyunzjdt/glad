@@ -11,6 +11,7 @@
 #include <boost/fusion/include/io.hpp>
 #include <boost/optional.hpp>
 #include <list>
+#include <map>
 
 namespace glad { namespace ast 
 {
@@ -60,7 +61,8 @@ enum optoken {
     op_greater,
     op_greater_equal,
     op_and,
-    op_or
+    op_or,
+    op_concat
 };
 
 struct quoted_string {
@@ -131,7 +133,7 @@ struct action_statement {
 
 struct beamline_statement {
     identifier name;
-    std::list<identifier> lines;
+    expression lines;
 };
 
 struct include_statement {
@@ -292,7 +294,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 BOOST_FUSION_ADAPT_STRUCT(
     glad::ast::beamline_statement,
     (glad::ast::identifier, name)
-    (std::list<glad::ast::identifier>, lines)
+    (glad::ast::expression, lines)
     )
 
 BOOST_FUSION_ADAPT_STRUCT(

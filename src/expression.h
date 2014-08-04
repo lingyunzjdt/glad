@@ -30,7 +30,8 @@ namespace glad
         qi::rule<Iterator, ast::expression(), skipper<Iterator> >
             expr, equality_expr, relational_expr,
             logical_or_expr, logical_and_expr,
-            additive_expr, multiplicative_expr
+            additive_expr, multiplicative_expr,
+            concat_expr
             ;
 
         qi::rule<Iterator, ast::operand(), skipper<Iterator> >
@@ -117,6 +118,7 @@ namespace glad
         additive_op.add
             ("+", ast::op_plus)
             ("-", ast::op_minus)
+            (",", ast::op_concat)
             ;
 
         multiplicative_op.add

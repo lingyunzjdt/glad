@@ -91,9 +91,9 @@ namespace glad
             ;
 
         beamline_statement = 
-            (identifier >> ':' >> lit("line") >> '=' >> '(')
-            >> +(identifier % ',')
-            >> ')'
+            (identifier >> ':' >> lit("line"))
+            >> '='
+            >> expr
             >> ';'
             ;
             
