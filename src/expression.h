@@ -241,8 +241,8 @@ namespace glad
         // Annotation: on success in primary_expr, call annotation.
         // on_success(primary_expr,
         //     annotation_function(error_handler.iters)(_val, _1));
-        debug(primary_expr);
-        debug(identifier);
+        // debug(primary_expr);
+        // debug(identifier);
     }
 }
 

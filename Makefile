@@ -1,6 +1,6 @@
 CXXFLAGS=-I/opt/local/include
-OBJS=main.o statement.o #expression.o
-all: glad
+OBJS=main.o statement.o parser.o #expression.o
+all: glad tesla_glad
 
 #%.o : src/%.cc
 %.o : src/%.cc
@@ -14,6 +14,9 @@ main.o: src/main.cpp src/ast.h
 
 glad: $(OBJS)
 	$(CXX)  -L/opt/local/lib -o $@ $(OBJS) -lboost_system-mt -lboost_filesystem-mt
+
+tesla_glad: $(OBJS) tesla_glad.o
+	$(CXX) -L/opt/local/lib -o $@ statement.o parser.o tesla_glad.o -lboost_system-mt -lboost_filesystem-mt
 
 clean:
 	rm -f *.o
