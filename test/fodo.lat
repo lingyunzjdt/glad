@@ -1,0 +1,7 @@
+d0: drift
+d1: drift, L = 3.2
+qf: quad, L = 0, k1=-1
+qd: quad, L = 0, k1 = -qf.k1
+fodo: line=(qf, d1, qd, qd, d1, qf)
+fodo2: line=(-qf, d1, qd, qd, d1, -qf)
+fodo3: line=(-fodo2, fodo)
