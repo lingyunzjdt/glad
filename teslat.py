@@ -271,14 +271,14 @@ def expand_line(line, elemdict):
 import logging
 logging.basicConfig(
     level = logging.DEBUG,
-    filename = "parselog.txt",
+    filename = "log.txt",
     filemode = "w",
     format = "%(filename)10s:%(lineno)4d:%(message)s"
 )
 log = logging.getLogger()
 
 import ply.yacc as yacc
-parser = yacc.yacc(debug=debug, debuglog=log)
+parser = yacc.yacc(write_tables=False, debug=debug, debuglog=log)
 
 lat = open(sys.argv[1], 'r').read()
 print(lat)
